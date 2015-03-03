@@ -1,0 +1,109 @@
+written by Radovan Garabík
+http://kassiopeia.juls.savba.sk/~garabik/software/polynice/
+
+polynice is a nice(1)-like utility to throttle long running processes
+beyond what can be achieved by nice(1), by repeatedly suspending and
+resuming the process.
+
+
+Requirements
+------------
+
+polynice is written in python3 and runs mainly on Linux systems - in
+particular, it uses GNU ps to find out process children (it works on
+Debian GNU/kFreeBSD).
+
+If psutil is installed, polynice will take advantage of it and children
+detection will be multiplatform. This will also enable nice(1) and
+ionice(1) functionality.
+
+
+Usage
+-----
+
+You can use polynice either to run a command (in this case it mimics nice(1)
+usage), or to specify a PID of a running process.
+
+Throttling is done by periodically suspending (via SIGSTOP) and resuming (via
+SIGCONT) the process being throttled.
+
+The parameter -n A/B is used to specify the throttling ratio. The process will
+be suspended for A seconds, then it will run for B seconds, then again
+suspended for A seconds etc... Floating point values can be used, e.g. -n 0.4/2
+will make the process run 2 seconds and suspend for 0.4 seconds out of 2.4
+second time interval.
+
+If a single number is specified, B is taken to be 1, e.g. -n 3 will suspend the
+process for 3 seconds and run it 1 second.
+
+The default is 1/1, i.e. run the process 50% of the time in 2 second time
+intervals.
+
+polynice is able to replace to a certain extent nice, renice and ionice commands.
+It accepts following compatibility options:
+
+-c IOCLASS, --class IOCLASS
+Sets  process I/O scheduling class (the same as ionice): 0: none,
+1: realtime, 2: best-effort, 3: idle. The  same  as  the  ionice
+parameter -c.
+
+--ion N, --classdata N
+Specifies  the  I/O  scheduling class data. The same as the ionice
+parameter -n.
+
+--nn N
+Specifies the scheduling priority of the process. The same as  the
+renice parameter -n.
+
+-a
+In addition to throttling, set maximum possible nice values (equivalent
+to ionice -c 3 nice -n 20)
+
+You can use the -v parameter to increase verbosity - print to stderr $ when
+process is stopped and = when run.
+
+Use -vv to be more verbose, print timestamp for each stop/run action
+to stderr. Use mostly with the -p option, otherwise it
+will clobber screen output.
+
+Use -vvv to be even more verbose. Useful for debugging.
+
+
+Caveats
+-------
+
+polynice uses only pid's to identify processes, which can lead to a race
+condition - if the child's pid is reused in the time between creation of list
+of children and action (stopping or resuming), an incorrect process might be
+throttled (but at most for one control period).
+
+
+Examples
+--------
+
+$ polynice -n 2/0.5 scp server:bigfile local/
+
+will copy `bigfile' from the remote server, repeatedly suspending the scp
+command for 2 seconds, running it for 0.5 seconds, thus reducing the overall
+download speed to one fifths and keeping the network connection responsive.
+
+
+$ polynice -vv -n 3 -p 12345
+
+will run the process (and all its children) with pid 12345 for 1 second,
+suspend it for 3 seconds, i.e. keeping CPU load to one fourth, thus reducing
+its power consumption and overheating.
+
+$ polynice program
+
+just use the default, run the program 80% of the time in 1 second intervals.
+
+
+$ polynice -a program
+
+will use the defaults as well, run the program 80% of the time in 1
+second intervals, but in addition it will give it the lowest possible
+scheduler priority ( equivalent to running `nice 20 program') and the
+lowest possible I/O priority (equivalent to running `ionice -c 3
+program').
+

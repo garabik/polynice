@@ -1,0 +1,16 @@
+Source: polynice
+Section: utils
+Priority: optional
+Maintainer: Radovan Garabík <garabik@kassiopeia.juls.savba.sk>
+Build-Depends: debhelper (>= 7), python3
+Standards-Version: 3.9.5
+Homepage: http://kassiopeia.juls.savba.sk/~garabik/software/polynice/
+
+Package: polynice
+Architecture: all
+Depends: ${misc:Depends}, python3
+Suggests: python3-psutil (>= 0.5)
+Description: nice(1)-like utility to throttle long running processes
+ An utility to throttle long running processes beyond what can be achieved
+ by nice(1). This is done by periodically suspending and resuming the
+ process and its child proceses.

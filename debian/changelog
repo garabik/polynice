@@ -1,0 +1,41 @@
+polynice (0.6-1) unstable; urgency=low
+
+  * some python2 compatibility
+  * added --term-after and --kill-after, to terminate (timeout) the process
+    after given time
+
+ -- Radovan Garabík <garabik@kassiopeia.juls.savba.sk>  Wed, 11 Feb 2015 14:59:18 +0100
+
+polynice (0.5-1) unstable; urgency=low
+
+  * fix fallback priority setting
+
+ -- Radovan Garabík <garabik@kassiopeia.juls.savba.sk>  Tue, 30 Sep 2014 10:35:27 +0200
+
+polynice (0.4-1) unstable; urgency=low
+
+  * renamed to polynice
+  * fix traceback when psutil is not installed
+  * improve argument parsing
+  * add fallback to calling ionice and renice
+
+ -- Radovan Garabík <garabik@kassiopeia.juls.savba.sk>  Thu, 21 Aug 2014 12:55:53 +0200
+
+verynice (0.3-1) unstable; urgency=low
+
+  * Added os.setpriority() fallback if psutil is not installed
+
+ -- Radovan Garabík <garabik@kassiopeia.juls.savba.sk>  Sat, 10 May 2014 16:43:53 +0200
+
+verynice (0.2-1) unstable; urgency=low
+
+  * Added nice and ionice interface
+
+ -- Radovan Garabík <garabik@kassiopeia.juls.savba.sk>  Sat, 03 May 2014 15:39:53 +0200
+
+verynice (0.1-1) unstable; urgency=low
+
+  * Initial release
+
+ -- Radovan Garabík <garabik@kassiopeia.juls.savba.sk>  Wed, 23 Apr 2014 13:34:50 +0200
+

@@ -1,0 +1,132 @@
+.TH POLYNICE 1
+.SH NAME
+polynice \- nice(1)-like utility to throttle long running processes
+.SH SYNOPSIS
+.B polynice
+.I [options] "command [args]"
+
+.B polynice
+.I [options] -p PID
+.SH DESCRIPTION
+
+.BR polynice
+will execute command
+.I "command"
+with optional parameters 
+.I "[args]"
+throttling it by periodically stopping and restarting the command and all of its child processes.
+
+Alternatively, it can be used to control already running process, identified by
+.I -p PID
+
+.SH OPTIONS
+.TP
+.B  \-\-help
+Show summary of options.
+.TP
+.B  \-\-version
+Display version.
+.TP
+.B  \-n N
+Throttle the command by N, where N can be written as a ratio A/B, which means
+that the process will be stopped for A seconds and will run for B seconds.
+If a single number is used, B defaults to 1.
+Float values are possible. Default: 1/4.
+.TP
+.B \-c IOCLASS, \-\-class IOCLASS
+Set process I/O scheduling class (the same as ionice): 0: none, 1:
+realtime, 2: best-effort, 3: idle. The same as the ionice parameter
+.B \-c.
+.TP
+.B \-\-ion N, \-\-classdata N
+Specify the I/O scheduling class data. The same as the
+.B ionice(1)
+parameter
+.B \-n.
+.TP
+.B \-\-nn N
+Specify the scheduling priority of the process. The same as the 
+.B renice(1)
+parameter
+.B \-n.
+.TP
+.B \-p PID
+Do not run subprocess, but throttle PID instead.
+.TP
+.B \-a
+In addition to throttling, set maximum possible nice values (equivalent
+to ionice -c 3 nice -n 20)
+.TP
+.B \-\-term\-after DURATION
+If the controlled program is running after DURATION seconds, terminte it (with TERM ignal)
+.TP
+.B \-\-kill\-after DURATION
+Also send a KILL signal if the program is still running this long after
+the 
+.B \-\-term\-after
+time expired and the TERM signal has been sent.
+.TP
+.B \-v
+increase verbosity, print to stderr 
+.B $ 
+when process is stopped and 
+.B =
+when run.
+.TP
+.B \-vv
+be more verbose, print timestamp for each stop/run action to stderr. Use mostly with the
+.B -p
+option, otherwise it will clobber screen output.
+.TP
+.B \-vvv
+be even more verbose. Useful for debugging.
+
+.TP
+.B DURATION
+(inspired by
+.BR timeout "(1))
+is a floating point number with an optional suffix: `s' for seconds
+(the default), `m' for minutes, `h' for hours, `d' for Earth solar 
+days or `S' for Sols (Martian solar day).
+
+.SH CAVEATS
+.B polynice
+uses only pid's to identify processes, which can lead to a race
+condition - if the child's pid is reused in the time between creation of
+list of children and action (stopping or resuming), an incorrect process might be
+throttled (but at most for one control period).
+.SH EXAMPLES
+
+.B $ polynice -n 2/0.5 scp server:bigfile local/
+
+will copy `bigfile' from the remote server, repeatedly suspending the scp
+command for 2 seconds, running it for 0.5 seconds, thus reducing the overall
+download speed to one fifths and keeping the network connection responsive.
+
+.B $ polynice -vv -n 3 -p 12345
+
+will run the process (and all its children) with pid 12345 for 1 second,
+suspend it for 3 seconds, i.e. keeping CPU load to one fourth, thus reducing
+its power consumption and overheating.
+
+.B $ polynice program
+
+just use the default, run the program 50% of the time in 1 second intervals.
+
+.B $ polynice -a program
+
+will use the defaults as well, run the program 80% of the time in 1
+second intervals, but in addition it will give it the lowest possible
+scheduler priority ( equivalent to running 
+.B nice 20 program
+) and the lowest possible
+I/O priority ( equivalent to running 
+.B ionice -c 3 program
+).
+
+.SH SEE ALSO
+.BR nice "(1),
+.BR ionice "(1)
+.SH AUTHOR
+Written by Radovan Garab\('ik <garabik @ kassiopeia.juls.savba.sk>
+
