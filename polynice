@@ -126,7 +126,10 @@ def renice_pid_fallback(pid, niceness, ioclass, ioclassdata):
                 cmd += ['-n', str(ioclassdata)]
             cmd += ['-p', str(pid)]
             DEBUG(2, 'calling '+' '.join(cmd))
-            subprocess.call(cmd)
+            try:
+                subprocess.call(cmd)
+            except FileNotFoundError:
+                DEBUG(2, 'ionice command not found')
         else:
             DEBUG(1, 'ionice not supported on non-Linux platforms')
 
