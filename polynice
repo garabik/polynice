@@ -104,9 +104,13 @@ def renice_pid_psutil(pid, niceness, ioclass, ioclassdata):
 def renice_pid_fallback(pid, niceness, ioclass, ioclassdata):
     if niceness is not None:
         DEBUG(2, 'setting scheduler priority of {} to {}'.format(pid, niceness))
-        cmd = ['/usr/bin/renice', '-n', str(niceness), '-p', str(pid)]
+        cmd = ['/usr/bin/renice', '-n', str(niceness), '-p', str(pid)+'1']
         DEBUG(2, 'calling '+' '.join(cmd))
-        subprocess.call(cmd)
+        try:
+            output = str(subprocess.check_output(cmd), 'utf-8')
+        except subprocess.CalledProcessError as cperr:
+            output = str(cperr.output, 'utf-8')
+            DEBUG(2, 'error renicing '+output)
     if ioclass is not None:
         DEBUG(2, 'setting i/o class of {} to {}, classdata {}'.format(pid, ioclass, ioclassdata))
         cmd = ['/usr/bin/ionice', '-c', str(ioclass)]
