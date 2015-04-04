@@ -25,7 +25,17 @@ try:
 except NameError:
     ProcessLookupError = OSError
 
+try:
+    from subprocess import DEVNULL # python 3
+except ImportError:
+    import os
+    global DEVNULL
+    DEVNULL = open(os.devnull, 'wb')
+
 VERSION='0.6'
+
+global debuglevel
+debuglevel = 0
 
 def DEBUG(level, *msg, **args):
     end = args.get('end', '\n')
@@ -45,11 +55,11 @@ def children_pid_psutil(pid):
     return children
 
 def children_pid_ps(pid):
-    "get the list of the children (and grand and grandgrand...) pids of a pid (linux only, uses ps)"
+    "get the list of the children (and grand and grandgrand...) pids of a pid"
 
     # get pid, parent_pid
-    proc = subprocess.Popen('ps --no-headers -o pid,ppid ax', shell=True, stdout=subprocess.PIPE)
-    pidppid = [x.split() for x in proc.communicate()[0].splitlines() if x]
+    proc = subprocess.Popen('ps ax -o pid,ppid', shell=True, stdout=subprocess.PIPE)
+    pidppid = [x.split() for x in proc.communicate()[0].splitlines()[1:] if x]
     pidppid = [(int(x[0]), int(x[1])) for x in pidppid]
     children = set()
     while True:
@@ -94,7 +104,7 @@ def renice_pid_psutil(pid, niceness, ioclass, ioclassdata):
         if niceness is not None:
             DEBUG(2, 'setting scheduler priority of {} to {}'.format(pid, niceness))
             p.set_nice(niceness)
-        if ioclass is not None:
+        if (ioclass is not None) and ('set_ionice' in p.__dict__):
             DEBUG(2, 'setting i/o class of {} to {}, classdata {}'.format(pid, ioclass, ioclassdata))
             p.set_ionice(ioclass, ioclassdata)
     except ProcessLookupError:
@@ -104,21 +114,28 @@ def renice_pid_psutil(pid, niceness, ioclass, ioclassdata):
 def renice_pid_fallback(pid, niceness, ioclass, ioclassdata):
     if niceness is not None:
         DEBUG(2, 'setting scheduler priority of {} to {}'.format(pid, niceness))
-        cmd = ['/usr/bin/renice', '-n', str(niceness), '-p', str(pid)+'1']
+        cmd = ['renice', '-n', str(niceness), '-p', str(pid)]
         DEBUG(2, 'calling '+' '.join(cmd))
         try:
-            output = str(subprocess.check_output(cmd), 'utf-8')
+            output = subprocess.check_output(cmd)
+            output = str(output, 'utf-8')
+            DEBUG(3, output)
         except subprocess.CalledProcessError as cperr:
             output = str(cperr.output, 'utf-8')
             DEBUG(2, 'error renicing '+output)
+        except FileNotFoundError:
+            DEBUG(2, 'renice command not found')
     if ioclass is not None:
-        DEBUG(2, 'setting i/o class of {} to {}, classdata {}'.format(pid, ioclass, ioclassdata))
-        cmd = ['/usr/bin/ionice', '-c', str(ioclass)]
-        if ioclassdata is not None:
-            cmd += ['-n', str(ioclassdata)]
-        cmd += ['-p', str(pid)]
-        DEBUG(2, 'calling '+' '.join(cmd))
-        subprocess.call(cmd)
+        if sys.platform in ('linux', 'linux2'):
+            DEBUG(2, 'setting i/o class of {} to {}, classdata {}'.format(pid, ioclass, ioclassdata))
+            cmd = ['ionice', '-c', str(ioclass)]
+            if ioclassdata is not None:
+                cmd += ['-n', str(ioclassdata)]
+            cmd += ['-p', str(pid)]
+            DEBUG(2, 'calling '+' '.join(cmd))
+            subprocess.call(cmd, stdout=DEVNULL)
+        else:
+            DEBUG(1, 'ionice not supported on non-Linux platforms')
 
 # set priorities using only python library modules
 def renice_pid_internal(pid, niceness, ioclass, ioclassdata):
@@ -131,13 +148,13 @@ def renice_pid_internal(pid, niceness, ioclass, ioclassdata):
             except ProcessLookupError:
                 pass
         else:
-            DEBUG(0, 'psutil not installed, renice ignored')
+            DEBUG(1, 'psutil not installed, renice ignored')
     if ioclass is not None or ioclassdata is not None:
-        DEBUG(0, 'psutil not installed, ionice ignored')
+        DEBUG(1, 'psutil not installed, ionice ignored')
 
 if have_psutil:
     renice_pid = renice_pid_psutil
-elif sys.platform in ('linux', 'linux2'):
+elif sys.platform in ('linux', 'linux2','darwin'):
     renice_pid = renice_pid_fallback
 else:
     renice_pid = renice_pid_internal
@@ -333,7 +350,6 @@ if __name__ == '__main__':
 
     args, rest = parser.parse_known_args()
 
-    global debuglevel
     debuglevel = args.debuglevel
     DEBUG(3, 'args:', str(args))
     DEBUG(3, 'optparse:', using_optparse)

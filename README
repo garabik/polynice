@@ -9,9 +9,8 @@ resuming the process.
 Requirements
 ------------
 
-polynice is written in python3 and runs mainly on Linux systems - in
-particular, it uses GNU ps to find out process children (it works on
-Debian GNU/kFreeBSD).
+polynice is written in python3 and runs mainly on Linux systems, but has
+been also tested on Mac OS X (Darwin)
 
 If psutil is installed, polynice will take advantage of it and children
 detection will be multiplatform. This will also enable nice(1) and ionice(1)
