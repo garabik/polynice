@@ -25,13 +25,6 @@ try:
 except NameError:
     ProcessLookupError = OSError
 
-try:
-    from subprocess import DEVNULL # python 3
-except ImportError:
-    import os
-    global DEVNULL
-    DEVNULL = open(os.devnull, 'wb')
-
 VERSION='0.6'
 
 global debuglevel
@@ -133,7 +126,7 @@ def renice_pid_fallback(pid, niceness, ioclass, ioclassdata):
                 cmd += ['-n', str(ioclassdata)]
             cmd += ['-p', str(pid)]
             DEBUG(2, 'calling '+' '.join(cmd))
-            subprocess.call(cmd, stdout=DEVNULL)
+            subprocess.call(cmd)
         else:
             DEBUG(1, 'ionice not supported on non-Linux platforms')
 
