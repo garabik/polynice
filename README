@@ -14,9 +14,11 @@ particular, it uses GNU ps to find out process children (it works on
 Debian GNU/kFreeBSD).
 
 If psutil is installed, polynice will take advantage of it and children
-detection will be multiplatform. This will also enable nice(1) and
-ionice(1) functionality.
+detection will be multiplatform. This will also enable nice(1) and ionice(1)
+functionality. If psutil is not installed, polynice will try to use nice(1) and
+ionice(1) to achieve the same functionality.
 
+There is some python2 compatibility, but not all functionality is guaranteed.
 
 Usage
 -----
@@ -36,8 +38,8 @@ second time interval.
 If a single number is specified, B is taken to be 1, e.g. -n 3 will suspend the
 process for 3 seconds and run it 1 second.
 
-The default is 1/1, i.e. run the process 50% of the time in 2 second time
-intervals.
+The default is 1/4, i.e. run the process 80% of the time, suspend it every 4th
+second for one second.
 
 polynice is able to replace to a certain extent nice, renice and ionice commands.
 It accepts following compatibility options:

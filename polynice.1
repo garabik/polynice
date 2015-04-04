@@ -58,7 +58,7 @@ In addition to throttling, set maximum possible nice values (equivalent
 to ionice -c 3 nice -n 20)
 .TP
 .B \-\-term\-after DURATION
-If the controlled program is running after DURATION seconds, terminte it (with TERM ignal)
+If the controlled program is running after DURATION seconds, terminate it (with TERM ignal)
 .TP
 .B \-\-kill\-after DURATION
 Also send a KILL signal if the program is still running this long after
@@ -111,11 +111,11 @@ its power consumption and overheating.
 
 .B $ polynice program
 
-just use the default, run the program 50% of the time in 1 second intervals.
+just use the default, run the program 80% of the time in 5 second intervals.
 
 .B $ polynice -a program
 
-will use the defaults as well, run the program 80% of the time in 1
+will use the defaults as well, run the program 80% of the time in 5
 second intervals, but in addition it will give it the lowest possible
 scheduler priority ( equivalent to running 
 .B nice 20 program
@@ -127,6 +127,7 @@ I/O priority ( equivalent to running
 .SH SEE ALSO
 .BR nice "(1),
 .BR ionice "(1)
+.BR timeout "(1)
 .SH AUTHOR
 Written by Radovan Garab\('ik <garabik @ kassiopeia.juls.savba.sk>
 
