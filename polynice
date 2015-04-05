@@ -104,20 +104,24 @@ def renice_pid_psutil(pid, niceness, ioclass, ioclassdata):
         # if the process disappeared in the meantime
         pass
 
+def suppress_output(cmd):
+    # subprocess.check_output wrapper, to suppress and debug the output
+    try:
+        output = subprocess.check_output(cmd, stderr=subprocess.STDOUT)
+        output = str(output, 'utf-8')
+        DEBUG(3, output)
+    except subprocess.CalledProcessError as cperr:
+        output = str(cperr.output, 'utf-8')
+        DEBUG(2, 'error: '+output)
+    except FileNotFoundError:
+        DEBUG(2, 'command not found: '+cmd)
+
 def renice_pid_fallback(pid, niceness, ioclass, ioclassdata):
     if niceness is not None:
         DEBUG(2, 'setting scheduler priority of {} to {}'.format(pid, niceness))
         cmd = ['renice', '-n', str(niceness), '-p', str(pid)]
         DEBUG(2, 'calling '+' '.join(cmd))
-        try:
-            output = subprocess.check_output(cmd)
-            output = str(output, 'utf-8')
-            DEBUG(3, output)
-        except subprocess.CalledProcessError as cperr:
-            output = str(cperr.output, 'utf-8')
-            DEBUG(2, 'error renicing '+output)
-        except FileNotFoundError:
-            DEBUG(2, 'renice command not found')
+        suppress_output(cmd)
     if ioclass is not None:
         if sys.platform in ('linux', 'linux2'):
             DEBUG(2, 'setting i/o class of {} to {}, classdata {}'.format(pid, ioclass, ioclassdata))
@@ -126,10 +130,7 @@ def renice_pid_fallback(pid, niceness, ioclass, ioclassdata):
                 cmd += ['-n', str(ioclassdata)]
             cmd += ['-p', str(pid)]
             DEBUG(2, 'calling '+' '.join(cmd))
-            try:
-                subprocess.call(cmd)
-            except FileNotFoundError:
-                DEBUG(2, 'ionice command not found')
+            suppress_output(cmd)
         else:
             DEBUG(1, 'ionice not supported on non-Linux platforms')
 
@@ -341,8 +342,6 @@ if __name__ == '__main__':
                        version='%(prog)s '+VERSION)
         parser.add_argument('command', help='Command to run', default=None, nargs='?')
         parser.add_argument('args', nargs=REMAINDER)
-
-
 
     args, rest = parser.parse_known_args()
 
