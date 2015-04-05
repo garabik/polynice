@@ -25,9 +25,6 @@ try:
 except NameError:
     ProcessLookupError = OSError
 
-if sys.version_info[0] < 3:
-    str = unicode
-
 VERSION='0.6'
 
 global debuglevel
@@ -77,18 +74,21 @@ def kill_children(pid, sig, raise_parent):
     "kill all the children of pid with signal, including the parent process"
     "if raise_parent is true, missing pid process will raise ProcessLookupError, to signal it does not exist anymore"
     # first kill the main process
+    children = children_pid(pid)
     if raise_parent:
+        DEBUG(3, 'killing pid', pid, 'with signal', sig)
         os.kill(pid, sig)
     else:
         try:
+            DEBUG(3, 'killing pid', pid, 'with signal', sig)
             os.kill(pid, sig)
         except ProcessLookupError:
             pass
 
     # and then the children
-    children = children_pid(pid)
     for childpid in children:
         try:
+            DEBUG(3, 'killing pid', childpid, 'with signal', sig)
             os.kill(childpid, sig)
         except ProcessLookupError:
             # if the child disappeared in the meantime
@@ -111,13 +111,13 @@ def suppress_output(cmd):
     # subprocess.check_output wrapper, to suppress and debug the output
     try:
         output = subprocess.check_output(cmd, stderr=subprocess.STDOUT)
-        output = str(output, 'utf-8')
+        output = output.decode('utf-8')
         DEBUG(3, output)
     except subprocess.CalledProcessError as cperr:
-        output = str(cperr.output, 'utf-8')
-        DEBUG(2, 'error: '+output)
+        output = cperr.output.decode('utf-8')
+        DEBUG(2, 'error:', output)
     except FileNotFoundError:
-        DEBUG(2, 'command not found: '+cmd)
+        DEBUG(2, 'command not found:', cmd)
 
 def renice_pid_fallback(pid, niceness, ioclass, ioclassdata):
     if niceness is not None:
@@ -154,7 +154,7 @@ def renice_pid_internal(pid, niceness, ioclass, ioclassdata):
 
 if have_psutil:
     renice_pid = renice_pid_psutil
-elif sys.platform in ('linux', 'linux2','darwin'):
+elif sys.platform in ('linux', 'linux2', 'darwin', 'gnukfreebsd8'):
     renice_pid = renice_pid_fallback
 else:
     renice_pid = renice_pid_internal
