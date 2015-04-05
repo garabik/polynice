@@ -25,6 +25,9 @@ try:
 except NameError:
     ProcessLookupError = OSError
 
+if sys.version_info[0] < 3:
+    str = unicode
+
 VERSION='0.6'
 
 global debuglevel
@@ -266,7 +269,7 @@ def watch_pid(pid, run_period, sleep_period, termafter, killafter):
             pass
 
 def get_duration(x):
-    "convert duration - a number with 's', 'm', 'h' or 'd' suffix to seconds"
+    "convert duration - a number with 's', 'm', 'h', 'd' or 'S' suffix to seconds"
     if not x: # None or empty string
         return x
     suffix = 's'
@@ -357,7 +360,6 @@ if __name__ == '__main__':
         run_period = float(run_period)
     else:
         sleep_period = float(args.veryniceness)
-
 
     # nice(1) emulation
     niceness = args.niceness
