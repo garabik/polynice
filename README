@@ -1,5 +1,5 @@
 written by Radovan Garabík
-http://kassiopeia.juls.savba.sk/~garabik/software/polynice/
+http://kassiopeia.juls.savba.sk/~garabik/software/polynice.html
 
 polynice is a nice(1)-like utility to throttle long running processes
 beyond what can be achieved by nice(1), by repeatedly suspending and
