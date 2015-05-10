@@ -40,6 +40,9 @@ second time interval.
 If a single number is specified, B is taken to be 1, e.g. -n 3 will suspend the
 process for 3 seconds and run it 1 second.
 
+If 0 is used, do not throttle (useful in combination with -a or --term-after
+options).
+
 The default is 1/4, i.e. run the process 80% of the time, suspend it every 4th
 second for one second.
 
@@ -58,6 +61,14 @@ parameter -n.
 --nn N
 Specifies the scheduling priority of the process. The same as  the
 renice parameter -n.
+
+--term-after DURATION
+If the controlled program is running after DURATION seconds, terminate
+it (with TERM signal).
+
+--kill-after DURATION
+Also send a KILL signal if the program is still running this long after
+the --term-after time expired and the TERM signal has been sent.
 
 -a
 In addition to throttling, set maximum possible nice values (equivalent

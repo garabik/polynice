@@ -30,7 +30,11 @@ Display version.
 .B  \-n N
 Throttle the command by N, where N can be written as a ratio A/B, which means
 that the process will be stopped for A seconds and will run for B seconds.
-If a single number is used, B defaults to 1.
+If a single number is used, B defaults to 1. If 0 is used, do not throttle (useful
+in combination with 
+.B -a
+or 
+.B --term-after options).
 Float values are possible. Default: 1/4.
 .TP
 .B \-c IOCLASS, \-\-class IOCLASS
@@ -58,18 +62,17 @@ In addition to throttling, set maximum possible nice values (equivalent
 to ionice -c 3 nice -n 20)
 .TP
 .B \-\-term\-after DURATION
-If the controlled program is running after DURATION seconds, terminate it (with TERM ignal)
+If the controlled program is running after DURATION seconds, terminate it (with TERM signal).
 .TP
 .B \-\-kill\-after DURATION
-Also send a KILL signal if the program is still running this long after
-the 
+Also send a KILL signal if the program is still running this long after the
 .B \-\-term\-after
 time expired and the TERM signal has been sent.
 .TP
 .B \-v
-increase verbosity, print to stderr 
+increase verbosity, print to stderr
 .B $ 
-when process is stopped and 
+when process is stopped and
 .B =
 when run.
 .TP

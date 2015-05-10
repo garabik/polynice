@@ -188,19 +188,19 @@ def watcher(pid, run_period, sleep_period, termafter, killafter):
                         kill_children(pid, signal.SIGKILL, raise_parent=True)
         children = children_pid(pid)
         time.sleep(run_period)
-        DEBUG(1, '$', end='\b')
-        DEBUG(2, time.asctime(), 'STOP:', pid,  children)
-        try:
-            kill_children(pid, signal.SIGSTOP, raise_parent=True)
-            time.sleep(sleep_period)
-            DEBUG(1, '=', end='\b')
-            DEBUG(2, time.asctime(), 'CONT:', pid, children)
-        except ProcessLookupError:
-            break
-        finally:
-            # be careful to leave the processes running if something bad happens
-            kill_children(pid, signal.SIGCONT, raise_parent=False)
-
+        if sleep_period != 0:
+            DEBUG(1, '$', end='\b')
+            DEBUG(2, time.asctime(), 'STOP:', pid,  children)
+            try:
+                kill_children(pid, signal.SIGSTOP, raise_parent=True)
+                time.sleep(sleep_period)
+            except ProcessLookupError:
+                break
+            finally:
+                # be careful to leave the processes running if something bad happens
+                kill_children(pid, signal.SIGCONT, raise_parent=False)
+                DEBUG(1, '=', end='\b')
+                DEBUG(2, time.asctime(), 'CONT:', pid, children)
 
 def run_subprocess(cmd, run_period, sleep_period, niceness, ioclass, ioclassdata, termafter, killafter):
     p = subprocess.Popen(cmd, shell=True)
@@ -208,7 +208,7 @@ def run_subprocess(cmd, run_period, sleep_period, niceness, ioclass, ioclassdata
         # renice only once, all the newly created children will inherit the nice values
         renice_children_pid(p.pid, niceness, ioclass, ioclassdata)
 
-        t = threading.Thread(target=watcher, args = (p.pid, run_period, sleep_period, termafter, killafter))
+        t = threading.Thread(target=watcher, args=(p.pid, run_period, sleep_period, termafter, killafter))
         t.daemon = True
         t.start()
         try:
@@ -358,6 +358,8 @@ if __name__ == '__main__':
         sleep_period, run_period = args.veryniceness.split('/')
         sleep_period = float(sleep_period)
         run_period = float(run_period)
+    elif args.veryniceness == '0':
+        sleep_period = 0
     else:
         sleep_period = float(args.veryniceness)
 
