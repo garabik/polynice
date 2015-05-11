@@ -202,7 +202,7 @@ def watcher(pid, run_period, sleep_period, termafter, killafter):
                 DEBUG(1, '=', end='\b')
                 DEBUG(2, time.asctime(), 'CONT:', pid, children)
 
-def run_subprocess(cmd, run_period, sleep_period, niceness, ioclass, ioclassdata, termafter, killafter):
+def run_subprocess(cmd, run_period, sleep_period, niceness, ioclass, ioclassdata, termafter, killafter, throttling_mode):
     p = subprocess.Popen(cmd, shell=True)
     try:
         # renice only once, all the newly created children will inherit the nice values
@@ -244,7 +244,7 @@ def run_subprocess(cmd, run_period, sleep_period, niceness, ioclass, ioclassdata
             pass
 
 
-def watch_pid(pid, run_period, sleep_period, termafter, killafter):
+def watch_pid(pid, run_period, sleep_period, termafter, killafter, throttling_mode):
     try:
         watcher(pid, run_period, sleep_period, termafter, killafter)
     except KeyboardInterrupt:
@@ -327,6 +327,10 @@ if __name__ == '__main__':
                        default=None,
                        help='Kill the process (and its children) if it is still running after these many seconds after termination signal has been sent (with --term-after)')
 
+    parser.add_argument('--mode', dest='mode', action='store',
+                       type=str,
+                       default='fixed',
+                       help='Throttling mode, one of: fixed (the default, stop and re-run processes in fixed time intervals), random (stop or run the processes each time interval with probability corresponding to the niceness).')
 
     parser.add_argument('-n', dest='veryniceness', action='store',
                        type=str, default='1/4',
@@ -374,6 +378,9 @@ if __name__ == '__main__':
     termafter = get_duration(args.termafter)
     killafter = get_duration(args.killafter)
 
+    # throttling mode
+    throttling_mode = args.mode
+
     if niceness is None and args.all_nice:
         niceness = 20
     if ioclass is None and args.all_nice:
@@ -388,6 +395,8 @@ if __name__ == '__main__':
     DEBUG(2, 'pid:', args.pid)
     DEBUG(2, 'term-after:', termafter)
     DEBUG(2, 'kill-after:', killafter)
+    DEBUG(2, 'mode:', throttling_mode)
+
 
     if 'command' in dir(args) and args.command:
         cmd = args.command + ' '+ ' '.join(args.args)
@@ -406,9 +415,9 @@ if __name__ == '__main__':
         sys.exit(1)
     if args.pid:
         renice_children_pid(args.pid, niceness, ioclass, args.ioclassdata)
-        watch_pid(args.pid, run_period, sleep_period, termafter, killafter)
+        watch_pid(args.pid, run_period, sleep_period, termafter, killafter, throttling_mode)
     elif cmd:
-        run_subprocess(cmd, run_period, sleep_period, niceness, ioclass, ioclassdata, termafter, killafter)
+        run_subprocess(cmd, run_period, sleep_period, niceness, ioclass, ioclassdata, termafter, killafter, throttling_mode)
     else:
         print ('usage: polynice [options] command')
         parser.print_help()
