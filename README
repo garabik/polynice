@@ -118,7 +118,7 @@ $ polynice -a program
 
 will use the defaults as well, run the program 80% of the time in 1
 second intervals, but in addition it will give it the lowest possible
-scheduler priority ( equivalent to running `nice 20 program') and the
+scheduler priority (equivalent to running `nice 20 program') and the
 lowest possible I/O priority (equivalent to running `ionice -c 3
 program').
 
