@@ -46,8 +46,14 @@ options).
 The default is 1/4, i.e. run the process 80% of the time, suspend it every 4th
 second for one second.
 
-polynice is able to replace to a certain extent nice, renice and ionice commands.
-It accepts following compatibility options:
+Using the parameter --mode=random changes the semantics of throttling -- the
+process will be watched in B sized time interval, and for each of the
+intervals, it will be suspended with probability p=A/(A+B) (and run with
+probability 1-p). Statistically, the stop/run ratio will approximate the
+default (--mode=fixed) ratio if run sufficiently long.
+
+polynice is able to replace to a certain extent nice, renice and ionice
+commands. It accepts following compatibility options:
 
 -c IOCLASS, --class IOCLASS
 Sets  process I/O scheduling class (the same as ionice): 0: none,
@@ -62,6 +68,9 @@ parameter -n.
 Specifies the scheduling priority of the process. The same as  the
 renice parameter -n.
 
+
+polynice can replace somewhat the timeout(1) command and accepts these options:
+
 --term-after DURATION
 If the controlled program is running after DURATION seconds, terminate
 it (with TERM signal).
@@ -69,6 +78,13 @@ it (with TERM signal).
 --kill-after DURATION
 Also send a KILL signal if the program is still running this long after
 the --term-after time expired and the TERM signal has been sent.
+
+Other options:
+
+--mode {random,fixed}
+Throttling mode. If fixed (the default), stop and re-run processes in fixed
+time intervals. If random, stop or run the processes with probability
+corresponding to the niceness.
 
 -a
 In addition to throttling, set maximum possible nice values (equivalent
