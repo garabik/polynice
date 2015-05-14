@@ -36,7 +36,6 @@ def DEBUG(level, *msg, **args):
         print(*msg, file=sys.stderr, end=end)
         sys.stderr.flush()
 
-
 def children_pid_psutil(pid):
     "get the list of the children (and grand and grandgrand...) pids of a pid (psutil)"
     try:
@@ -206,7 +205,6 @@ def watcher(pid, run_period, sleep_period, termafter, killafter, throttling_mode
                     # this happend each run_period
                     # probability of stoping should be:
                     p_stop = sleep_period/(sleep_period+run_period)
-                    p_run = run_period/(sleep_period+run_period)
                     r = random.random()
                     if r < p_stop:
                         kill_children(pid, signal.SIGSTOP, raise_parent=True)
