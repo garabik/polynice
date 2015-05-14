@@ -6,14 +6,15 @@ beyond what can be achieved by nice(1), by repeatedly suspending and
 resuming the process.
 
 It can also lower scheduler and I/O priorities, emulating nice(1) and
-ionice(1), and terminate the processes after given time.
+ionice(1), and terminate the processes after given time, emulating
+timeout(1).
 
 
 Requirements
 ------------
 
 polynice is written in python3 and runs mainly on Linux systems, but has
-been also tested on Mac OS X (Darwin)
+been also tested on Mac OS X (Darwin).
 
 If psutil is installed, polynice will take advantage of it and children
 detection will be multiplatform. This will also enable nice(1) and ionice(1)
