@@ -1,3 +1,10 @@
+polynice (0.8-1) unstable; urgency=low
+
+  * add --mode parameter, to implement randomized throttling
+  * add -n0 to disable throttling
+
+ -- Radovan Garabík <garabik@kassiopeia.juls.savba.sk>  Fri, 15 May 2015 21:08:25 +0200
+
 polynice (0.7-1) unstable; urgency=low
 
   * better OSX compatibility (thanks to Juraj Bednár)
