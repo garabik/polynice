@@ -109,9 +109,14 @@ def renice_pid_psutil(pid, niceness, ioclass, ioclassdata):
 def suppress_output(cmd):
     # subprocess.check_output wrapper, to suppress and debug the output
     try:
-        output = subprocess.check_output(cmd, stderr=subprocess.STDOUT)
-        output = output.decode('utf-8')
-        DEBUG(3, output)
+        if 'check_output' in subprocess.__dict__:
+            # check_output appeared in python2.7
+            output = subprocess.check_output(cmd, stderr=subprocess.STDOUT)
+            output = output.decode('utf-8')
+            DEBUG(3, output)
+        else:
+            # if using older python, use the alternative and discard the output
+            subprocess.call(cmd, stdout=open(os.devnull, 'wb'))
     except subprocess.CalledProcessError as cperr:
         output = cperr.output.decode('utf-8')
         DEBUG(2, 'error:', output)
@@ -120,13 +125,13 @@ def suppress_output(cmd):
 
 def renice_pid_fallback(pid, niceness, ioclass, ioclassdata):
     if niceness is not None:
-        DEBUG(2, 'setting scheduler priority of {} to {}'.format(pid, niceness))
+        DEBUG(2, 'setting scheduler priority of {pid} to {niceness}'.format(pid=pid, niceness=niceness))
         cmd = ['renice', '-n', str(niceness), '-p', str(pid)]
         DEBUG(2, 'calling '+' '.join(cmd))
         suppress_output(cmd)
     if ioclass is not None:
         if sys.platform in ('linux', 'linux2'):
-            DEBUG(2, 'setting i/o class of {} to {}, classdata {}'.format(pid, ioclass, ioclassdata))
+            DEBUG(2, 'setting i/o class of {pid} to {ioclass}, classdata {ioclassdata}'.format(pid=pid, ioclass=ioclass, ioclassdata=ioclassdata))
             cmd = ['ionice', '-c', str(ioclass)]
             if ioclassdata is not None:
                 cmd += ['-n', str(ioclassdata)]
