@@ -25,7 +25,7 @@ try:
 except NameError:
     ProcessLookupError = OSError
 
-VERSION='0.8'
+VERSION='0.9rc'
 
 global debuglevel
 debuglevel = 0
@@ -230,6 +230,7 @@ def watcher(pid, run_period, sleep_period, termafter, killafter, throttling_mode
 
 def run_subprocess(cmd, run_period, sleep_period, niceness, ioclass, ioclassdata, termafter, killafter, throttling_mode):
     p = subprocess.Popen(cmd, shell=True)
+    exitcode = 127 # default exit code
     try:
         # renice only once, all the newly created children will inherit the nice values
         renice_children_pid(p.pid, niceness, ioclass, ioclassdata)
@@ -239,6 +240,7 @@ def run_subprocess(cmd, run_period, sleep_period, niceness, ioclass, ioclassdata
         t.start()
         try:
             p.communicate()
+            exitcode = p.wait()
         except KeyboardInterrupt:
             try:
                 DEBUG(2, '\nCTRL C detected')
@@ -254,6 +256,7 @@ def run_subprocess(cmd, run_period, sleep_period, niceness, ioclass, ioclassdata
     #            DEBUG(2, 'Process ended with status', status)
     #            sys.exit(status)
                 time.sleep(0.5) # just in case, to give the main process time to clean up
+                #exitcode = p.returncode # is this correct here?
             except KeyboardInterrupt:
                 # if the user pressed CTRL C quickly twice
                 DEBUG(2, '\nCTRL C pressed multiple times, killing processes and exiting')
@@ -261,14 +264,14 @@ def run_subprocess(cmd, run_period, sleep_period, niceness, ioclass, ioclassdata
                     os.kill(p.pid, signal.SIGINT)
                 except ProcessLookupError:
                     pass
-                sys.exit(1)
+                sys.exit(127)
     finally:
         # if the spawned process still hangs around, ask it politely to finish
         try:
             os.kill(p.pid, signal.SIGTERM)
         except ProcessLookupError:
             pass
-
+    return exitcode
 
 def watch_pid(pid, run_period, sleep_period, termafter, killafter, throttling_mode):
     try:
@@ -448,7 +451,8 @@ if __name__ == '__main__':
         renice_children_pid(args.pid, niceness, ioclass, args.ioclassdata)
         watch_pid(args.pid, run_period, sleep_period, termafter, killafter, throttling_mode)
     elif cmd:
-        run_subprocess(cmd, run_period, sleep_period, niceness, ioclass, ioclassdata, termafter, killafter, throttling_mode)
+        exitcode = run_subprocess(cmd, run_period, sleep_period, niceness, ioclass, ioclassdata, termafter, killafter, throttling_mode)
+        sys.exit(exitcode)
     else:
         print ('usage: polynice [options] command')
         parser.print_help()
