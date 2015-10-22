@@ -57,6 +57,15 @@ parameter
 .B \-p PID
 Do not run subprocess, but throttle PID instead.
 .TP
+.B \-\-mode {random,fixed}
+Throttling mode. If
+.B fixed
+(the default), stop and re-run processes in fixed
+time intervals. If
+.BR random ",
+stop or run the processes with probability
+corresponding to the niceness.
+.TP
 .B \-a
 In addition to throttling, set maximum possible nice values (equivalent
 to ionice -c 3 nice -n 20)

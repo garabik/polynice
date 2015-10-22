@@ -1,9 +1,10 @@
 polynice (0.8-1) unstable; urgency=low
 
-  * add --mode parameter, to implement randomized throttling
+  * add '--mode random' parameter, to implement randomized throttling
   * add -n0 to disable throttling
+  * python2.6 compatibility
 
- -- Radovan Garabík <garabik@kassiopeia.juls.savba.sk>  Fri, 15 May 2015 21:08:25 +0200
+ -- Radovan Garabík <garabik@kassiopeia.juls.savba.sk>  Mon, 01 Jun 2015 14:48:25 +0200
 
 polynice (0.7-1) unstable; urgency=low
 
