@@ -25,7 +25,7 @@ try:
 except NameError:
     ProcessLookupError = OSError
 
-VERSION='0.9rc'
+VERSION='0.9'
 
 global debuglevel
 debuglevel = 0
