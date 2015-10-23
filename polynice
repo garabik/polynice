@@ -50,9 +50,15 @@ def children_pid_ps(pid):
     "get the list of the children (and grand and grandgrand...) pids of a pid"
 
     # get pid, parent_pid
-    proc = subprocess.Popen('ps ax -o pid,ppid', shell=True, stdout=subprocess.PIPE)
-    pidppid = [x.split() for x in proc.communicate()[0].splitlines()[1:] if x]
-    pidppid = [(int(x[0]), int(x[1])) for x in pidppid]
+    try:
+        proc = subprocess.Popen('ps ax -o pid,ppid', shell=True, stdout=subprocess.PIPE)
+        pidppid = [x.split() for x in proc.communicate()[0].splitlines()[1:] if x]
+        pidppid = [(int(x[0]), int(x[1])) for x in pidppid]
+    except OSError:
+        # this can happen in out-of-memory situations
+        # instead of raising an exception (and ending the subprocesses)
+        # just ignore the childred
+        pidppid = []
     children = set()
     while True:
         prev_len = len(children)
