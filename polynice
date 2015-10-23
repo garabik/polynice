@@ -257,11 +257,8 @@ def run_subprocess(cmd, run_period, sleep_period, niceness, ioclass, ioclassdata
                     os.kill(p.pid, signal.SIGINT)
                 except ProcessLookupError:
                     pass
-    #            status = os.wait()[1]
-    #            DEBUG(2, 'Process ended with status', status)
-    #            sys.exit(status)
                 time.sleep(0.5) # just in case, to give the main process time to clean up
-                #exitcode = p.returncode # is this correct here?
+                #exitcode = p.returncode # is this correct here, or should we use p.wait?
             except KeyboardInterrupt:
                 # if the user pressed CTRL C quickly twice
                 DEBUG(2, '\nCTRL C pressed multiple times, killing processes and exiting')
