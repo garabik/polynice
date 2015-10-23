@@ -1,3 +1,10 @@
+polynice (0.9-1) unstable; urgency=low
+
+  * propagate subprocess exit status
+  * catch exception if `ps' fails
+
+ --  Radovan Garabík <garabik@kassiopeia.juls.savba.sk>  Fri, 23 Oct 2015 10:35:22 +0200
+
 polynice (0.8-1) unstable; urgency=low
 
   * add '--mode random' parameter, to implement randomized throttling
