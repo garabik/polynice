@@ -110,21 +110,28 @@ def renice_pid_psutil(pid, niceness, ioclass, ioclassdata):
         p = psutil.Process(pid)
         if niceness is not None:
             DEBUG(2, 'setting scheduler priority of {} to {}'.format(pid, niceness))
-            if hasattr(p, 'set_nice'):
-                p.set_nice(niceness)
-            elif hasattr(p, 'nice'):
-                p.nice(niceness)
-            else:
-                raise NotImplementedError('Broken psutil interface, neither set_nice() nor nice() methods present')
+            try:
+                if hasattr(p, 'set_nice'):
+                    p.set_nice(niceness)
+                elif hasattr(p, 'nice'):
+                    p.nice(niceness)
+                else:
+                    raise NotImplementedError('Broken psutil interface, neither set_nice() nor nice() methods present')
+            except (PermissionError, psutil.AccessDenied):
+                DEBUG(2, 'setting priority not allowed, ignoring')
+
         if ioclass is not None:
             DEBUG(2, 'setting i/o class of {} to {}, classdata {}'.format(pid, ioclass, ioclassdata))
+            try:
+                if hasattr(p, 'set_ionice'):
+                    p.set_ionice(ioclass, ioclassdata)
+                elif hasattr(p, 'ionice'):
+                    p.ionice(ioclass, ioclassdata)
+                else:
+                    DEBUG(3, 'Missing set_ionice or ionice psutil implementation, ignoring')
+            except (PermissionError, psutil.AccessDenied):
+                DEBUG(2, 'setting i/o priority not allowed, ignoring')
 
-            if hasattr(p, 'set_ionice'):
-                p.set_ionice(ioclass, ioclassdata)
-            elif hasattr(p, 'ionice'):
-                p.ionice(ioclass, ioclassdata)
-            else:
-                DEBUG(3, 'Missing set_ionice or ionice psutil implementation, ignoring')
     except ProcessLookupError:
         # if the process disappeared in the meantime
         pass
@@ -191,7 +198,6 @@ def renice_children_pid(pid, niceness, ioclass, ioclassdata):
     children = children_pid(pid)
     for childpid in children | set([pid]):
         renice_pid(childpid, niceness, ioclass, ioclassdata)
-
 
 def watcher(pid, run_period, sleep_period, termafter, killafter, throttling_mode):
     start_time = time.time()
