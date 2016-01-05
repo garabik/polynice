@@ -30,7 +30,7 @@ try:
 except NameError:
     ProcessLookupError = OSError
 
-VERSION='0.9'
+VERSION='0.95rc1'
 
 global debuglevel
 debuglevel = 0
