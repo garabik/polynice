@@ -20,6 +20,10 @@ try:
 except ImportError:
     have_psutil = False
 
+if have_psutil:
+    if not(hasattr(psutil.Process, 'get_children') or hasattr(psutil.Process, 'children')):
+        have_psutil = False
+
 # ProcessLookupError was added in python 3.3
 try:
     ProcessLookupError
@@ -36,6 +40,7 @@ def DEBUG(level, *msg, **args):
     if level<=debuglevel:
         print(*msg, file=sys.stderr, end=end)
         sys.stderr.flush()
+
 
 def children_pid_psutil(pid):
     "get the list of the children (and grand and grandgrand...) pids of a pid (psutil version)"
@@ -117,7 +122,7 @@ def renice_pid_psutil(pid, niceness, ioclass, ioclassdata):
                     p.nice(niceness)
                 else:
                     raise NotImplementedError('Broken psutil interface, neither set_nice() nor nice() methods present')
-            except (PermissionError, psutil.AccessDenied):
+            except psutil.AccessDenied:
                 DEBUG(2, 'setting priority not allowed, ignoring')
 
         if ioclass is not None:
@@ -129,7 +134,7 @@ def renice_pid_psutil(pid, niceness, ioclass, ioclassdata):
                     p.ionice(ioclass, ioclassdata)
                 else:
                     DEBUG(3, 'Missing set_ionice or ionice psutil implementation, ignoring')
-            except (PermissionError, psutil.AccessDenied):
+            except psutil.AccessDenied:
                 DEBUG(2, 'setting i/o priority not allowed, ignoring')
 
     except ProcessLookupError:
