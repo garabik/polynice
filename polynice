@@ -37,17 +37,22 @@ def DEBUG(level, *msg, **args):
         sys.stderr.flush()
 
 def children_pid_psutil(pid):
-    "get the list of the children (and grand and grandgrand...) pids of a pid (psutil)"
+    "get the list of the children (and grand and grandgrand...) pids of a pid (psutil version)"
     try:
         p = psutil.Process(pid)
-        children = p.get_children(recursive=True)
+        if hasattr(p, 'get_children'):
+            children = p.get_children(recursive=True)
+        elif hasattr(p, 'children'): # for psutil >= 2
+            children = p.children(recursive=True)
+        else:
+            raise NotImplementedError('Broken psutil interface, neither get_children() nor children() methods present')
         children = set(x.pid for x in children)
     except psutil.NoSuchProcess:
         children = set()
     return children
 
 def children_pid_ps(pid):
-    "get the list of the children (and grand and grandgrand...) pids of a pid"
+    "get the list of the children (and grand and grandgrand...) pids of a pid (naïve ps(1) parsing, linux only)"
 
     # get pid, parent_pid
     try:
@@ -57,7 +62,7 @@ def children_pid_ps(pid):
     except OSError:
         # this can happen in out-of-memory situations
         # instead of raising an exception (and ending the subprocesses)
-        # just ignore the childred
+        # just ignore the children
         pidppid = []
     children = set()
     while True:
@@ -104,10 +109,21 @@ def renice_pid_psutil(pid, niceness, ioclass, ioclassdata):
         p = psutil.Process(pid)
         if niceness is not None:
             DEBUG(2, 'setting scheduler priority of {} to {}'.format(pid, niceness))
-            p.set_nice(niceness)
-        if (ioclass is not None) and ('set_ionice' in p.__dict__):
+            if hasattr(p, 'set_nice'):
+                p.set_nice(niceness)
+            elif hasattr(p, 'nice'):
+                p.nice(niceness)
+            else:
+                raise NotImplementedError('Broken psutil interface, neither set_nice() nor nice() methods present')
+        if ioclass is not None:
             DEBUG(2, 'setting i/o class of {} to {}, classdata {}'.format(pid, ioclass, ioclassdata))
-            p.set_ionice(ioclass, ioclassdata)
+
+            if hasattr(p, 'set_ionice'):
+                p.set_ionice(ioclass, ioclassdata)
+            elif hasattr(p, 'ionice'):
+                p.ionice(ioclass, ioclassdata)
+            else:
+                DEBUG(3, 'Missing set_ionice or ionice psutil implementation, ignoring')
     except ProcessLookupError:
         # if the process disappeared in the meantime
         pass
